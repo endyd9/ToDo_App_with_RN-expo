@@ -21,7 +21,7 @@ export default function App() {
   const [text, setText] = useState("");
   const [modi, setModi] = useState(false);
   const [modiId, setModiId] = useState("");
-  const [toDos, setToDos] = useState({});
+  const [toDos, setToDos] = useState({ menu: working });
   const [loading, setLoading] = useState(true);
   const travel = async () => setWorking(false);
   const work = async () => setWorking(true);
@@ -32,10 +32,11 @@ export default function App() {
 
   const onChangeText = (payload) => setText(payload);
 
-  const loadToDOs = async () => {
+  const loadToDos = async () => {
     const loadidToDos = JSON.parse(await AsnyncStorage.getItem(STORAGE_KEY));
     if (loadidToDos === null) return setLoading(false);
     setToDos(loadidToDos);
+    setWorking(loadidToDos.menu);
     setLoading(false);
   };
 
@@ -66,7 +67,7 @@ export default function App() {
     this.input.focus();
   };
   const modiToDo = async () => {
-    if (text === "") return;
+    if (text === "") return setModi(false);
     const newToDos = { ...toDos };
     newToDos[modiId].text = text;
     setToDos(newToDos);
@@ -91,10 +92,18 @@ export default function App() {
       },
     ]);
   };
-  useEffect(() => {}, []);
+
   useEffect(() => {
-    loadToDOs();
+    loadToDos();
   }, []);
+
+  useEffect(() => {
+    const newTodos = { ...toDos };
+    newTodos.menu = working;
+    setToDos(newTodos);
+    saveToDos(newTodos);
+  }, [working]);
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -125,7 +134,9 @@ export default function App() {
               ? modi
                 ? "Modifiy To Do"
                 : "Add To Do"
-              : "Where Are You Going?"
+              : modi
+              ? "Modify Wish"
+              : "What is Your Wish?"
           }
           style={styles.input}
           value={text}
@@ -140,13 +151,13 @@ export default function App() {
                   <Text
                     style={{
                       ...styles.toDoText,
-                      color: toDos[key].done ? "gray" : "white",
-                      textDecorationLine: toDos[key].done
+                      color: toDos[key]?.done ? "gray" : "white",
+                      textDecorationLine: toDos[key]?.done
                         ? "line-through"
                         : null,
                     }}
                   >
-                    {toDos[key].text}
+                    {toDos[key]?.text}
                   </Text>
                   <View style={styles.btns}>
                     <TouchableOpacity onPress={() => checkToDo(key)}>
